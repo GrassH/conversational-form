@@ -6,7 +6,8 @@
 namespace cf {
 	// interface
 	export const ChatListEvents = {
-		CHATLIST_UPDATED: "cf-chatlist-updated"
+		CHATLIST_UPDATED: "cf-chatlist-updated",
+		CHATLIST_SHOWN: "cf-chatlist-shown"
 	}
 
 	// class
@@ -219,6 +220,9 @@ namespace cf {
 					detail: this
 				}));
 				chatResponse.show();
+				this.eventTarget.dispatchEvent(new CustomEvent(ChatListEvents.CHATLIST_SHOWN, {
+					detail: this
+				}));
 			}, 0);
 		}
 
@@ -275,7 +279,11 @@ namespace cf {
 			}
 		}
 
-		public createResponse(isRobotResponse: boolean, currentTag: ITag, value: string = null) : ChatResponse{
+		public createResponse(
+			isRobotResponse: boolean, 
+			currentTag: ITag, 
+			value: string = null
+		) : ChatResponse {
 			const scrollable: HTMLElement = <HTMLElement> this.el.querySelector(".scrollableInner");
 			const response: ChatResponse = new ChatResponse({
 				// image: null,
@@ -287,6 +295,36 @@ namespace cf {
 				response: value,
 				image: isRobotResponse ? Dictionary.getRobotResponse("robot-image") : Dictionary.get("user-image"),
 				container: scrollable
+			});
+
+			this.responses.push(response);
+
+			this.currentResponse = response;
+
+			this.onListUpdate(response);
+
+			return response;
+		}
+
+		public createDelayResponse(
+			isRobotResponse: boolean, 
+			currentTag: ITag, 
+			value: string = null,
+			callback?: Function
+		) : ChatResponse {
+			const scrollable: HTMLElement = <HTMLElement> this.el.querySelector(".scrollableInner");
+			const response: ChatResponse = new ChatResponse({
+				// image: null,
+				cfReference: this.cfReference,
+				list: this,
+				tag: currentTag,
+				eventTarget: this.eventTarget,
+				isRobotResponse: isRobotResponse,
+				response: value,
+				image: isRobotResponse ? Dictionary.getRobotResponse("robot-image") : Dictionary.get("user-image"),
+				container: scrollable,
+				externalControl: !!callback,
+				externalControlCallback: callback
 			});
 
 			this.responses.push(response);

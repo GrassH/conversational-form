@@ -4914,6 +4914,9 @@ var cf;
         ChatResponse.prototype.show = function () {
             this.visible = true;
             this.disabled = false;
+            if (this.externalControl) {
+                return;
+            }
             if (!this.response) {
                 this.setToThinking();
             }
@@ -5096,19 +5099,24 @@ var cf;
         };
         ChatResponse.prototype.tryClearThinking = function () {
             if (this.el.hasAttribute("thinking")) {
-                this.textEl.innerHTML = "";
                 this.el.removeAttribute("thinking");
             }
         };
-        ChatResponse.prototype.setToThinking = function () {
-            var canShowThinking = (this.isRobotResponse && this.uiOptions.robot.robotResponseTime !== 0) || (!this.isRobotResponse && this.cfReference.uiOptions.user.showThinking && !this._tag.skipUserInput);
+        ChatResponse.prototype.setToThinking = function (force) {
+            if (force === void 0) { force = false; }
+            var canShowThinking = force || (this.isRobotResponse
+                && this.uiOptions.robot.robotResponseTime !== 0) || (!this.isRobotResponse
+                && this.cfReference.uiOptions.user.showThinking
+                && !this._tag.skipUserInput);
             if (canShowThinking) {
                 this.textEl.innerHTML = ChatResponse.THINKING_MARKUP;
                 this.el.classList.remove("can-edit");
                 this.el.setAttribute("thinking", "");
             }
-            if (this.cfReference.uiOptions.user.showThinking || this.cfReference.uiOptions.user.showThumb) {
+            var addThkingResponse = this.cfReference.uiOptions.user.showThinking || this.cfReference.uiOptions.user.showThumb;
+            if (force || addThkingResponse) {
                 this.addSelf();
+                this.scrollTo();
             }
         };
         /**
@@ -5133,26 +5141,40 @@ var cf;
             }));
         };
         ChatResponse.prototype.setData = function (options) {
+            this.container = options.container;
             this.image = options.image;
             this.response = this.originalResponse = options.response;
             this.isRobotResponse = options.isRobotResponse;
+            this.externalControl = options.externalControl;
+            this.externalControlCallback = options.externalControlCallback;
             _super.prototype.setData.call(this, options);
         };
         ChatResponse.prototype.onElementCreated = function () {
             var _this = this;
             this.textEl = this.el.getElementsByTagName("text")[0];
             this.updateThumbnail(this.image);
-            if (this.isRobotResponse || this.response != null) {
-                // Robot is pseudo thinking, can also be user -->
-                // , but if addUserChatResponse is called from ConversationalForm, then the value is there, therefore skip ...
-                setTimeout(function () {
-                    _this.setValue({ text: _this.response });
-                }, 0);
-                //ConversationalForm.animationsEnabled ? Helpers.lerp(Math.random(), 500, 900) : 0);
+            if (this.externalControl) {
+                this.setToThinking(true);
+                this.externalControlCallback(function (text) {
+                    setTimeout(function () {
+                        _this.response = text;
+                        _this.setValue({ text: text });
+                    }, 0);
+                });
             }
             else {
-                if (this.cfReference.uiOptions.user.showThumb) {
-                    this.el.classList.add("peak-thumb");
+                if (this.isRobotResponse || this.response != null) {
+                    // Robot is pseudo thinking, can also be user -->
+                    // , but if addUserChatResponse is called from ConversationalForm, then the value is there, therefore skip ...
+                    setTimeout(function () {
+                        _this.setValue({ text: _this.response });
+                    }, 0);
+                    //ConversationalForm.animationsEnabled ? Helpers.lerp(Math.random(), 500, 900) : 0);
+                }
+                else {
+                    if (this.cfReference.uiOptions.user.showThumb) {
+                        this.el.classList.add("peak-thumb");
+                    }
                 }
             }
         };
@@ -5171,7 +5193,7 @@ var cf;
         ChatResponse.prototype.getTemplate = function () {
             return "<cf-chat-response class=\"" + (this.isRobotResponse ? "robot" : "user") + "\">\n\t\t\t\t<thumb><span></span></thumb>\n\t\t\t\t<text></text>\n\t\t\t</cf-chat-response>";
         };
-        ChatResponse.THINKING_MARKUP = "<p class='show'><thinking><span>.</span><span>.</span><span>.</span></thinking></p>";
+        ChatResponse.THINKING_MARKUP = "<p class='show'><thinking></thinking></p>";
         return ChatResponse;
     }(cf.BasicElement));
     cf.ChatResponse = ChatResponse;
@@ -5198,7 +5220,8 @@ var cf;
 (function (cf) {
     // interface
     cf.ChatListEvents = {
-        CHATLIST_UPDATED: "cf-chatlist-updated"
+        CHATLIST_UPDATED: "cf-chatlist-updated",
+        CHATLIST_SHOWN: "cf-chatlist-shown"
     };
     // class
     var ChatList = /** @class */ (function (_super) {
@@ -5367,6 +5390,9 @@ var cf;
                     detail: _this
                 }));
                 chatResponse.show();
+                _this.eventTarget.dispatchEvent(new CustomEvent(cf.ChatListEvents.CHATLIST_SHOWN, {
+                    detail: _this
+                }));
             }, 0);
         };
         /**
@@ -5430,6 +5456,27 @@ var cf;
                 response: value,
                 image: isRobotResponse ? cf.Dictionary.getRobotResponse("robot-image") : cf.Dictionary.get("user-image"),
                 container: scrollable
+            });
+            this.responses.push(response);
+            this.currentResponse = response;
+            this.onListUpdate(response);
+            return response;
+        };
+        ChatList.prototype.createDelayResponse = function (isRobotResponse, currentTag, value, callback) {
+            if (value === void 0) { value = null; }
+            var scrollable = this.el.querySelector(".scrollableInner");
+            var response = new cf.ChatResponse({
+                // image: null,
+                cfReference: this.cfReference,
+                list: this,
+                tag: currentTag,
+                eventTarget: this.eventTarget,
+                isRobotResponse: isRobotResponse,
+                response: value,
+                image: isRobotResponse ? cf.Dictionary.getRobotResponse("robot-image") : cf.Dictionary.get("user-image"),
+                container: scrollable,
+                externalControl: !!callback,
+                externalControlCallback: callback
             });
             this.responses.push(response);
             this.currentResponse = response;
@@ -5771,8 +5818,19 @@ var cf;
             this.theme = 'light';
             this.preventAutoAppend = false;
             this.preventAutoStart = false;
+            this.loaderTime = 1000;
             window.ConversationalForm = this;
-            this.cdnPath = this.cdnPath.split("{version}").join(this.version);
+            // hosted on your own server
+            if (typeof options.cdnPath === 'string') {
+                this.cdnPath = options.cdnPath;
+            }
+            else {
+                // Use default CDN path
+                this.cdnPath = this.cdnPath.split("{version}").join(this.version);
+            }
+            if (typeof options.loaderTime !== 'undefined') {
+                this.loaderTime = options.loaderTime;
+            }
             if (typeof options.suppressLog === 'boolean')
                 ConversationalForm.suppressLog = options.suppressLog;
             if (typeof options.showProgressBar === 'boolean')
@@ -5996,6 +6054,9 @@ var cf;
         ConversationalForm.prototype.addRobotChatResponse = function (response) {
             this.chatList.createResponse(true, null, response);
         };
+        ConversationalForm.prototype.addRobotDelayChatResponse = function (callbak) {
+            this.chatList.createDelayResponse(true, null, null, callbak);
+        };
         ConversationalForm.prototype.addUserChatResponse = function (response) {
             // add a "fake" user response..
             this.chatList.createResponse(false, null, response);
@@ -6088,6 +6149,9 @@ var cf;
             var innerWrap = document.createElement("div");
             innerWrap.className = "conversational-form-inner";
             this.el.appendChild(innerWrap);
+            var loader = document.createElement("div");
+            loader.className = "conversational-form-loader";
+            innerWrap.appendChild(loader);
             // Conversational Form UI
             this.chatList = new cf_1.ChatList({
                 eventTarget: this.eventTarget,
@@ -6113,6 +6177,9 @@ var cf;
             if (!this.tags || this.tags.length == 0) {
                 // no tags, so just show the input
                 this.userInput.visible = true;
+                setTimeout(function () {
+                    loader.classList.add('conversational-form-hidden');
+                }, this.loaderTime || 1000);
             }
         };
         /**

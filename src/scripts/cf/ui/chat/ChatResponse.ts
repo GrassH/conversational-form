@@ -13,6 +13,8 @@ namespace cf {
 		isRobotResponse: boolean;
 		tag: ITag;
 		container: HTMLElement;
+		externalControl?: boolean,
+		externalControlCallback?: Function
 	}
 
 	export const ChatResponseEvents = {
@@ -22,7 +24,7 @@ namespace cf {
 	// class
 	export class ChatResponse extends BasicElement {
 		public static list: ChatList;
-		private static THINKING_MARKUP: string = "<p class='show'><thinking><span>.</span><span>.</span><span>.</span></thinking></p>";
+		private static THINKING_MARKUP: string = "<p class='show'><thinking></thinking></p>";
 
 		public isRobotResponse: boolean;
 
@@ -37,6 +39,9 @@ namespace cf {
 		private _tag: ITag;
 		private readyTimer: any;
 		private responseLink: ChatResponse; // robot reference from use
+		private externalControl?: boolean;
+		private externalControlCallback?: Function;
+
 		private onReadyCallback: () => void;
 
 		private onClickCallback: () => void;
@@ -167,10 +172,14 @@ namespace cf {
 			}
 		}
 
-		public show(){
+		public show() {
 			
 			this.visible = true;
 			this.disabled = false;
+
+			if (this.externalControl) {
+				return;
+			}
 
 			if(!this.response){
 				this.setToThinking();
@@ -285,7 +294,6 @@ namespace cf {
 						}
 					}
 
-
 					this.readyTimer = setTimeout(() => {
 						if(this.onReadyCallback)
 							this.onReadyCallback();
@@ -376,21 +384,30 @@ namespace cf {
 
 		private tryClearThinking(){
 			if(this.el.hasAttribute("thinking")){
-				this.textEl.innerHTML = "";
 				this.el.removeAttribute("thinking");
 			}
 		}
 
-		private setToThinking(){
-			const canShowThinking: boolean = (this.isRobotResponse && this.uiOptions.robot.robotResponseTime !== 0) || (!this.isRobotResponse && this.cfReference.uiOptions.user.showThinking && !this._tag.skipUserInput);
+		private setToThinking(force: boolean = false){
+			const canShowThinking: boolean = force || (
+				this.isRobotResponse 
+				&& this.uiOptions.robot.robotResponseTime !== 0
+			) || (
+				!this.isRobotResponse 
+				&& this.cfReference.uiOptions.user.showThinking
+				&& !this._tag.skipUserInput
+			);
+
 			if(canShowThinking){
 				this.textEl.innerHTML = ChatResponse.THINKING_MARKUP;
 				this.el.classList.remove("can-edit");
 				this.el.setAttribute("thinking", "");
 			}
 
-			if(this.cfReference.uiOptions.user.showThinking || this.cfReference.uiOptions.user.showThumb){
+			const addThkingResponse = this.cfReference.uiOptions.user.showThinking || this.cfReference.uiOptions.user.showThumb;
+			if(force || addThkingResponse){
 				this.addSelf();
+				this.scrollTo();
 			}
 		}
 
@@ -419,27 +436,44 @@ namespace cf {
 		}
 
 		protected setData(options: IChatResponseOptions):void{
+			this.container = options.container;
 			this.image = options.image;
 			this.response = this.originalResponse = options.response;
 			this.isRobotResponse = options.isRobotResponse;
-			
+			this.externalControl = options.externalControl;
+			this.externalControlCallback = options.externalControlCallback;
+
 			super.setData(options);
 		}
+
 		protected onElementCreated(){
 			this.textEl = <Element> this.el.getElementsByTagName("text")[0];
 
 			this.updateThumbnail(this.image);
 
-			if(this.isRobotResponse || this.response != null){
-				// Robot is pseudo thinking, can also be user -->
-				// , but if addUserChatResponse is called from ConversationalForm, then the value is there, therefore skip ...
-				setTimeout(() =>{
-					this.setValue(<FlowDTO>{text: this.response})
-				}, 0);
-				//ConversationalForm.animationsEnabled ? Helpers.lerp(Math.random(), 500, 900) : 0);
-			}else{
-				if(this.cfReference.uiOptions.user.showThumb){
-					this.el.classList.add("peak-thumb");
+			if (this.externalControl) {
+				this.setToThinking(true);
+
+				this.externalControlCallback(
+					(text: string) =>  {
+						setTimeout(() =>{
+							this.response = text;
+							this.setValue(<FlowDTO>{text: text});
+						}, 0);
+					}
+				);
+			} else {
+				if(this.isRobotResponse || this.response != null){
+					// Robot is pseudo thinking, can also be user -->
+					// , but if addUserChatResponse is called from ConversationalForm, then the value is there, therefore skip ...
+					setTimeout(() =>{
+						this.setValue(<FlowDTO>{text: this.response})
+					}, 0);
+					//ConversationalForm.animationsEnabled ? Helpers.lerp(Math.random(), 500, 900) : 0);
+				}else{
+					if(this.cfReference.uiOptions.user.showThumb){
+						this.el.classList.add("peak-thumb");
+					}
 				}
 			}
 		}
@@ -457,6 +491,7 @@ namespace cf {
 
 			super.dealloc();
 		}
+
 		// template, can be overwritten ...
 		public getTemplate () : string {
 			return `<cf-chat-response class="` + (this.isRobotResponse ? "robot" : "user") + `">

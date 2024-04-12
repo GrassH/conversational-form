@@ -384,6 +384,12 @@ cf-input-button.cf-input-button {
 			}
 		}
 	}
+
+	&:not(.typing),
+	&[disabled="disabled"] {
+		opacity: .5;
+		pointer-events: none;
+	}
 }
 /**
 * Show submit button for groups when input is hidden

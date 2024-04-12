@@ -87,6 +87,12 @@ namespace cf {
 		preventSubmitOnEnter?:boolean;
 
 		animationsEnabled?:boolean;
+
+		// hosted on your own server
+		cdnPath?:string;
+
+		// loader time
+		loaderTime?: number;
 	}
 
 	// CUI formless options
@@ -147,6 +153,7 @@ namespace cf {
 		private theme: String = 'light';
 		private preventAutoAppend: boolean = false;
 		private preventAutoStart: boolean = false;
+		private loaderTime: number = 1000;
 		
 		private userInput: UserTextInput;
 		private microphoneInputObj: IUserInput;
@@ -154,7 +161,17 @@ namespace cf {
 		constructor(options: ConversationalFormOptions){
 			window.ConversationalForm = this;
 
-			this.cdnPath = this.cdnPath.split("{version}").join(this.version);
+			// hosted on your own server
+			if(typeof options.cdnPath === 'string') {
+				this.cdnPath = options.cdnPath;
+			} else {
+				// Use default CDN path
+				this.cdnPath = this.cdnPath.split("{version}").join(this.version);
+			}
+
+			if (typeof options.loaderTime !== 'undefined') {
+				this.loaderTime = options.loaderTime;
+			}
 
 			if(typeof options.suppressLog === 'boolean')
 				ConversationalForm.suppressLog = options.suppressLog;
@@ -314,20 +331,6 @@ namespace cf {
 				this.context.style.position = "relative";
 			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 			// if tags are not defined then we will try and build some tags our selves..
 			if(!this.tags || this.tags.length == 0){
 				this.tags = [];
@@ -403,6 +406,10 @@ namespace cf {
 
 		public addRobotChatResponse(response: string){
 			this.chatList.createResponse(true, null, response);
+		}
+
+		public addRobotDelayChatResponse(callbak: Function){
+			this.chatList.createDelayResponse(true, null, null, callbak);
 		}
 
 		public addUserChatResponse(response: string){
@@ -515,6 +522,10 @@ namespace cf {
 			innerWrap.className = "conversational-form-inner";
 			this.el.appendChild(innerWrap);
 
+			var loader = document.createElement("div");
+			loader.className = "conversational-form-loader";
+			innerWrap.appendChild(loader);
+
 			// Conversational Form UI
 			this.chatList = new ChatList({
 				eventTarget: this.eventTarget,
@@ -549,6 +560,10 @@ namespace cf {
 			if(!this.tags || this.tags.length == 0){
 				// no tags, so just show the input
 				this.userInput.visible = true;
+
+				setTimeout(() => {
+					loader.classList.add('conversational-form-hidden')
+				}, this.loaderTime || 1000);
 			}
 		}
 
