@@ -61,12 +61,12 @@ Start：
 git clone git@github.com:GrassH/conversational-form.git
 cd conversational-form
 npm install
-cd ./glup-task
+cd ./gulp-tasks
 npm install
 cd ../src/scripts/
 ../../node_modules/.bin/typings install
 cd ../../
-./node_modules/.bin/glup watch
+./node_modules/.bin/gulp watch
 ```
 
 ## Status
