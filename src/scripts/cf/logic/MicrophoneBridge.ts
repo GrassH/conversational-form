@@ -123,7 +123,7 @@ namespace cf {
 						// Some browsers just don't implement it - return a rejected promise with an error
 						// to keep a consistent interface
 						if (!getUserMedia) {
-						return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+							return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
 						}
 
 						// Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
@@ -195,7 +195,7 @@ namespace cf {
 			}
 
 			// call API, SpeechRecognintion etc. you decide, passing along the stream from getUserMedia can be used.. as long as the resolve is called with string attribute
-			this.promise = new Promise((resolve: any, reject: any) => this.microphoneObj.input(resolve, reject, this.currentStream) )
+			this.promise = new Promise((resolve: any, reject: any) => this.microphoneObj.input(resolve, reject, this.currentStream))
 			.then((result) => {
 
 				// api contacted
