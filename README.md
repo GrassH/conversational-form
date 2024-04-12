@@ -17,14 +17,21 @@ Conversational Form is an open-source concept by [SPACE10](https://www.space10.i
 Include Conversational Form in your page:
 
 ```html
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/space10-community/conversational-form@1.0.1/dist/conversational-form.min.js" crossorigin></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/gh/space10-community/conversational-form@1.0.1/dist/conversational-form.min.js"
+  crossorigin
+></script>
 ```
+
 Or download/install the latest release:
-- Clone the repo: ````git clone https://github.com/space10-community/conversational-form.git````
-- Install with npm: ````npm install conversational-form````
-- Install with yarn: ````yarn add conversational-form````
+
+- Clone the repo: `git clone https://github.com/space10-community/conversational-form.git`
+- Install with npm: `npm install conversational-form`
+- Install with yarn: `yarn add conversational-form`
 
 Manually instantiating Conversational Form
+
 ```
 import { ConversationalForm } from 'conversational-form';
 
@@ -35,48 +42,75 @@ const cfInstance = new ConversationalForm({
 ```
 
 Conversational Form will automatically look through the DOM for a form element with the attribute `cf-form`, and auto-instantiate.
+
 ```html
-<form id="my-form-element" cf-form>
-...
-</form>
+<form id="my-form-element" cf-form>...</form>
 ```
 
 Read the [Getting started](https://space10-community.github.io/conversational-form/docs/1.0.0/getting-started/) page for information on the framework contents, options, templates, examples and more.
 
+## Develop
+
+Requirements:
+
+- nodejs >=8.0.0 <9.0.0
+
+Start：
+
+```
+git clone git@github.com:GrassH/conversational-form.git
+cd conversational-form
+npm install
+cd ./glup-task
+npm install
+cd ../src/scripts/
+../../node_modules/.bin/typings install
+cd ../../
+./node_modules/.bin/glup watch
+```
+
 ## Status
+
 [![npm version](https://img.shields.io/npm/v/conversational-form.svg)](https://www.npmjs.com/package/conversational-form)
 [![Build Status](https://travis-ci.org/space10-community/conversational-form.svg?branch=develop)](https://travis-ci.org/space10-community/conversational-form)
 [![JS gzip size](http://img.badgesize.io/space10-community/conversational-form/master/dist/conversational-form.min.js?compression=gzip&label=JS+gzip+size)](https://github.com/space10-community/conversational-form/blob/master/dist/conversational-form.min.js)
 [![CSS gzip size](http://img.badgesize.io/space10-community/conversational-form/master/dist/conversational-form.min.css?compression=gzip&label=CSS+gzip+size)](https://github.com/space10-community/conversational-form/blob/master/dist/conversational-form.min.css)
 [![](https://data.jsdelivr.com/v1/package/npm/conversational-form/badge)](https://www.jsdelivr.com/package/npm/conversational-form)
 
-
 ## Bugs and feature requests
+
 If you see a bug, have an issue or a feature request then please submit an issue in the<a href="https://github.com/space10-community/conversational-form/issues">GitHub issue tracker</a>. For the sake of efficiency we urge you to look through open and closed issues before opening a new issue. Thank you ⭐
 
 ## Documentation
+
 Conversational Form's documentation is included in /docs of this repo as well as being <a href="https://space10-community.github.io/conversational-form/docs/">hosted on GitHub Pages</a>.
 
 ## Contributing
+
 Pull Requests for bug fixes or new features are always welcome. If you choose to do a Pull Request please keep these guidelines in mind:
+
 - Fork the "develop" branch
 - If you forked a while ago please get the latest changes from the "develop"-branch before submitting a Pull Request
-	- Locally merge (or rebase) the upstream development branch into your topic branch:
-		- ````git remote add upstream https://github.com/space10-community/conversational-form.git````
-		- ````git checkout develop````
-		- ````git pull upstream````
-		- ````git pull [--rebase] upstream develop````
+  - Locally merge (or rebase) the upstream development branch into your topic branch:
+    - `git remote add upstream https://github.com/space10-community/conversational-form.git`
+    - `git checkout develop`
+    - `git pull upstream`
+    - `git pull [--rebase] upstream develop`
 - Always create new Pull Request against the "develop" branch
 - Add a clear title and description as well as relevant references to open issues in your Pull Request
 
 ## Versioning
+
 See the <a href="https://github.com/space10-community/conversational-form/releases">Releases section of our GitHub project</a> for changelogs for each release version of Conversational Form. We will do our best to summarize noteworthy changes made in each release.
 
 ## Acknowledgement
+
 Thank you to everyone who has taken part in the creation of Conversational Form.
+
 - Development by <a href="http://twitter.com/flexmotion" target="_blank">Felix Nielsen</a> and <a href="https://jenssogaard.com/" target="_blank">Jens Soegaard</a> (v0.9.70+)
 - Design by <a href="http://www.charlieisslander.com/" target="_blank">Charlie Isslander</a> and <a href="http://norgram.co/" target="_blank">Norgram®</a>
 - Concept by <a href="https://space10.io" target="_blank">SPACE10</a>
 
 ## Copyright and license
+
 Conversational Form is licensed under <a href="https://github.com/space10-community/conversational-form/blob/master/LICENSE.md" target="_blank">MIT</a>. Documentation under <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.

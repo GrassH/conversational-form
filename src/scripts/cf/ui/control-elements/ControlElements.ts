@@ -366,7 +366,7 @@ namespace cf {
 
 		public animateElementsIn(){
 		
-			if(this.elements.length > 0){
+			if(this.elements && this.elements.length > 0){
 				this.resize();		
 				// this.el.style.transition = 'height 0.35s ease-out 0.2s';
 				this.list.style.height = '0px';

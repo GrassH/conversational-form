@@ -1027,7 +1027,7 @@ var cf;
         };
         ControlElements.prototype.animateElementsIn = function () {
             var _this = this;
-            if (this.elements.length > 0) {
+            if (this.elements && this.elements.length > 0) {
                 this.resize();
                 // this.el.style.transition = 'height 0.35s ease-out 0.2s';
                 this.list.style.height = '0px';
@@ -3800,6 +3800,7 @@ var cf;
     var UserInputSubmitButton = /** @class */ (function () {
         function UserInputSubmitButton(options) {
             this._active = true;
+            this._disabled = false;
             this.eventTarget = options.eventTarget;
             var template = document.createElement('template');
             template.innerHTML = this.getTemplate();
@@ -3857,6 +3858,25 @@ var cf;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(UserInputSubmitButton.prototype, "disabled", {
+            get: function () {
+                return this._disabled;
+            },
+            set: function (value) {
+                var hasChanged = this._disabled != value;
+                if (hasChanged) {
+                    this._disabled = value;
+                    if (value) {
+                        this.el.setAttribute("disabled", "disabled");
+                    }
+                    else {
+                        this.el.removeAttribute("disabled");
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         UserInputSubmitButton.prototype.addMicrophone = function (microphoneObj) {
             this.el.classList.add("microphone-interface");
             var template = document.createElement('template');
@@ -3871,6 +3891,20 @@ var cf;
             this.el.appendChild(mic);
             // this.mic = null;
             // this.el.appendChild(this.mic.el);
+        };
+        /**
+        * @name deactivate
+        * DEactivate the field
+        */
+        UserInputSubmitButton.prototype.deactivate = function () {
+            this.disabled = true;
+        };
+        /**
+        * @name reactivate
+        * REactivate the field
+        */
+        UserInputSubmitButton.prototype.reactivate = function () {
+            this.disabled = false;
         };
         UserInputSubmitButton.prototype.reset = function () {
             if (this.mic && !this.typing) {
@@ -6326,8 +6360,8 @@ else {
 (function (root, factory) {
 	// from http://ifandelse.com/its-not-hard-making-your-library-support-amd-and-commonjs/#update
 	if(typeof define === "function" && define.amd) {
-		define(["conversational-form"], function(conversationalform){
-			return (root.conversationalform = factory(conversationalform));
+		define([], function(){
+			return (root.conversationalform = factory());
 		});
 	} else if(typeof module === "object" && module.exports) {
 		module.exports = (root.conversationalform = factory(require("conversational-form")));

@@ -24,6 +24,7 @@ namespace cf {
 
 		private mic: MicrophoneBridge;
 		private _active: boolean = true;
+		protected _disabled: boolean = false;
 		private onMicrophoneTerminalErrorCallback: () => void;
 
 		public el: HTMLElement;
@@ -69,6 +70,22 @@ namespace cf {
 			return this.el.classList.contains("loading");
 		}
 
+		public set disabled(value: boolean){
+			const hasChanged: boolean = this._disabled != value;
+			if(hasChanged){
+				this._disabled = value;
+				if(value){
+					this.el.setAttribute("disabled", "disabled");
+				}else{
+					this.el.removeAttribute("disabled");
+				}
+			}
+		}
+
+		public get disabled(): boolean {
+			return this._disabled
+		}
+
 		constructor(options: UserInputSubmitButtonOptions){
 			this.eventTarget = options.eventTarget;
 
@@ -104,6 +121,22 @@ namespace cf {
 
 			// this.mic = null;
 			// this.el.appendChild(this.mic.el);
+		}
+
+		/**
+		* @name deactivate
+		* DEactivate the field
+		*/
+		public deactivate(): void {
+			this.disabled = true;
+		}
+
+		/**
+		* @name reactivate
+		* REactivate the field
+		*/
+		public reactivate(): void {
+			this.disabled = false;
 		}
 
 		public reset(){
@@ -164,7 +197,7 @@ namespace cf {
 			this.eventTarget.removeEventListener(MicrophoneBridgeEvent.TERMNIAL_ERROR, this.onMicrophoneTerminalErrorCallback, false);
 			this.onMicrophoneTerminalErrorCallback = null;
 
-			if(this.mic){
+			if(this.mic){  
 				this.mic.dealloc();
 			}
 			this.mic = null;
