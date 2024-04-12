@@ -6069,11 +6069,27 @@ var cf;
             this.userInput.onFlowStopped();
         };
         ConversationalForm.prototype.start = function () {
-            this.userInput.disabled = false;
-            if (!ConversationalForm.suppressLog)
-                console.log('option, disabled 3');
-            this.userInput.visible = true;
-            this.flowManager.start();
+            var _this = this;
+            if (!this.loaderTime) {
+                this.userInput.disabled = false;
+                if (!ConversationalForm.suppressLog)
+                    console.log('option, disabled 3');
+                this.userInput.visible = true;
+                this.flowManager.start();
+            }
+            else {
+                setTimeout(function () {
+                    var loader = _this.el.getElementsByClassName("conversational-form-loader")[0];
+                    if (loader) {
+                        loader.classList.add('conversational-form-hidden');
+                    }
+                    _this.userInput.disabled = false;
+                    if (!ConversationalForm.suppressLog)
+                        console.log('option, disabled 3');
+                    _this.userInput.visible = true;
+                    _this.flowManager.start();
+                }, this.loaderTime);
+            }
         };
         ConversationalForm.prototype.getTag = function (nameOrIndex) {
             if (typeof nameOrIndex == "number") {
@@ -6128,6 +6144,7 @@ var cf;
             return tags;
         };
         ConversationalForm.prototype.setupUI = function () {
+            var _this = this;
             // start the flow
             this.flowManager = new cf_1.FlowManager({
                 cfReference: this,
@@ -6149,9 +6166,11 @@ var cf;
             var innerWrap = document.createElement("div");
             innerWrap.className = "conversational-form-inner";
             this.el.appendChild(innerWrap);
-            var loader = document.createElement("div");
-            loader.className = "conversational-form-loader";
-            innerWrap.appendChild(loader);
+            if (this.loaderTime) {
+                var loader = document.createElement("div");
+                loader.className = "conversational-form-loader";
+                innerWrap.appendChild(loader);
+            }
             // Conversational Form UI
             this.chatList = new cf_1.ChatList({
                 eventTarget: this.eventTarget,
@@ -6176,10 +6195,15 @@ var cf;
                 this.flowManager.start();
             if (!this.tags || this.tags.length == 0) {
                 // no tags, so just show the input
-                this.userInput.visible = true;
-                setTimeout(function () {
-                    loader.classList.add('conversational-form-hidden');
-                }, this.loaderTime || 1000);
+                if (!this.loaderTime) {
+                    this.userInput.visible = true;
+                }
+                else {
+                    setTimeout(function () {
+                        _this.userInput.visible = true;
+                        loader.classList.add('conversational-form-hidden');
+                    }, this.loaderTime);
+                }
             }
         };
         /**

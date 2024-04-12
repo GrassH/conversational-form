@@ -426,11 +426,26 @@ namespace cf {
 		}
 
 		public start(){
-			this.userInput.disabled = false;
-			if(!ConversationalForm.suppressLog) console.log('option, disabled 3', );
-			this.userInput.visible = true;
+			if (!this.loaderTime) {
+				this.userInput.disabled = false;
+				if(!ConversationalForm.suppressLog) console.log('option, disabled 3', );
+				this.userInput.visible = true;
 
-			this.flowManager.start();
+				this.flowManager.start();
+			}  else {
+				setTimeout(() => {
+					var loader = <Element> this.el.getElementsByClassName("conversational-form-loader")[0]
+					if (loader) {
+						loader.classList.add('conversational-form-hidden');
+					}
+				
+					this.userInput.disabled = false;
+					if(!ConversationalForm.suppressLog) console.log('option, disabled 3', );
+					this.userInput.visible = true;
+
+					this.flowManager.start();
+				}, this.loaderTime);
+			}
 		}
 
 		public getTag(nameOrIndex: string | number): ITag{
@@ -522,9 +537,11 @@ namespace cf {
 			innerWrap.className = "conversational-form-inner";
 			this.el.appendChild(innerWrap);
 
-			var loader = document.createElement("div");
-			loader.className = "conversational-form-loader";
-			innerWrap.appendChild(loader);
+			if (this.loaderTime) {
+				var loader = document.createElement("div");
+				loader.className = "conversational-form-loader";
+				innerWrap.appendChild(loader);
+			}
 
 			// Conversational Form UI
 			this.chatList = new ChatList({
@@ -559,11 +576,14 @@ namespace cf {
 
 			if(!this.tags || this.tags.length == 0){
 				// no tags, so just show the input
-				this.userInput.visible = true;
-
-				setTimeout(() => {
-					loader.classList.add('conversational-form-hidden')
-				}, this.loaderTime || 1000);
+				if (!this.loaderTime) {
+					this.userInput.visible = true;
+				} else {
+					setTimeout(() => {
+						this.userInput.visible = true;
+						loader.classList.add('conversational-form-hidden')
+					}, this.loaderTime);
+				}
 			}
 		}
 
